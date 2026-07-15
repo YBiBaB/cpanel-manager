@@ -1,0 +1,20 @@
+#!/bin/bash
+
+if ! command -v php >/dev/null 2>&1
+then
+    echo "PHP CLI is required."
+    exit 1
+fi
+
+
+PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION;')
+
+
+if [ "$PHP_VERSION" -lt 8 ]
+then
+    echo "PHP 8 or higher is required."
+    exit 1
+fi
+
+
+php "$(dirname "$0")/bin/cpm.php"

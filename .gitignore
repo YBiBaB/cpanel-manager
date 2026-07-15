@@ -1,0 +1,8 @@
+/vendor/
+/.idea/
+/.vscode/
+
+.DS_Store
+
+/storage/logs/*
+!/storage/logs/.gitkeep
