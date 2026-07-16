@@ -2,4 +2,6 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-echo "CPanel Manager\n";
+$app = new Cpm\Application();
+
+$app->run();
