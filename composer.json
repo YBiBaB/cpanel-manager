@@ -1,11 +1,11 @@
 {
-    "name": "juntao/cpanel_manager",
+    "name": "juntao/cpanel-manager",
     "description": "A CLI tool for managing cPanel hosted websites",
     "type": "project",
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Juntao\\CpanelManager\\": "src/"
+            "Cpm\\": "src/"
         }
     },
     "authors": [
