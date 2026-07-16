@@ -37,30 +37,40 @@ class Console
         self::line("========================================");
     }
 
-    public static function ask(
-    string $question,
-    bool $allowEmpty = false,
-    ?callable $validator = null,
-    ?string $errorMessage = null
-): string {
-    while (true) {
-        self::write($question . " ");
-
-        $input = trim(fgets(STDIN));
-
-        // Check if input is empty
-        if (!$allowEmpty && $input === '') {
-            self::error("Input cannot be empty.");
-            continue;
-        }
-
-        // Custom validation
-        if ($validator !== null && !$validator($input)) {
-            self::error($errorMessage ?? "Invalid input.");
-            continue;
-        }
-
-        return $input;
+    public static function banner(string $name, string $version): void
+    {
+        self::line();
+        self::line("========================================");
+        self::line("        {$name}");
+        self::line("        {$version}");
+        self::line("========================================");
+        self::line();
     }
-}
+
+    public static function ask(
+        string $question,
+        bool $allowEmpty = false,
+        ?callable $validator = null,
+        ?string $errorMessage = null
+    ): string {
+        while (true) {
+            self::write($question . " ");
+
+            $input = trim(fgets(STDIN));
+
+            // Check if input is empty
+            if (!$allowEmpty && $input === '') {
+                self::error("Input cannot be empty.");
+                continue;
+            }
+
+            // Custom validation
+            if ($validator !== null && !$validator($input)) {
+                self::error($errorMessage ?? "Invalid input.");
+                continue;
+            }
+
+            return $input;
+        }
+    }
 }
