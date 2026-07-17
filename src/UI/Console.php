@@ -6,17 +6,24 @@ class Console
 {
     public static function write(string $message): void
     {
-        echo $message;
+        echo $message . PHP_EOL;
     }
 
     public static function line(string $message = ''): void
     {
-        echo $message . PHP_EOL;
+        self::write($message);
     }
 
     public static function success(string $message): void
     {
         self::line("[OK] " . $message);
+    }
+
+    public static function info(string $message): void
+    {
+        self::write(
+            "[INFO] " . $message
+        );
     }
 
     public static function warning(string $message): void
