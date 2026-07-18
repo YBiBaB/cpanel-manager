@@ -60,6 +60,10 @@ class ProjectScanner
                 continue;
             }
 
+            if ($this->isCpmApplication($path)) {
+                continue;
+            }
+
             if (!$this->isRepository($path)) {
                 continue;
             }
@@ -78,5 +82,16 @@ class ProjectScanner
     {
         return is_dir($path . DIRECTORY_SEPARATOR . '.git')
             && file_exists($path . DIRECTORY_SEPARATOR . 'composer.json');
+    }
+
+    private function isCpmApplication(
+        string $path
+    ): bool {
+
+        return file_exists(
+            $path
+            . DIRECTORY_SEPARATOR
+            . '.cpm-id'
+        );
     }
 }
