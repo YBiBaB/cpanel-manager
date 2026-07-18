@@ -74,6 +74,11 @@ class RepositoryConfigurator
             $documentRoot = "webroot";
         }
 
+        Console::success(
+            "Repository '{$folder}' configured."
+        );
+
+        Console::line();
 
         return [
             'name' => $name,
