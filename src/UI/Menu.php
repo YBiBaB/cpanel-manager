@@ -2,16 +2,8 @@
 
 namespace Cpm\UI;
 
-use Cpm\Project\ProjectManager;
-
 class Menu
 {
-    private ProjectManager $projectManager;
-
-    public function __construct()
-    {
-        $this->projectManager = new ProjectManager();
-    }
     public function show(): void
     {
         while (true) {
@@ -34,34 +26,44 @@ class Menu
             switch ($choice) {
 
                 case "1":
-                    $this->projectManager
-                        ->addExistingProject();
+
+                    $addProjectMenu =
+                        new AddProjectMenu();
+
+                    $addProjectMenu->show();
+
                     break;
 
 
                 case "2":
+
                     Console::info(
                         "Open Project selected."
                     );
+
                     break;
 
 
                 case "3":
+
                     Console::info(
                         "Settings selected."
                     );
+
                     break;
 
 
                 case "0":
+
                     Console::info(
-                        "Goodbye."
+                        "Bye."
                     );
 
                     return;
 
 
                 default:
+
                     Console::error(
                         "Invalid option."
                     );

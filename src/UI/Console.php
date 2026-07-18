@@ -80,4 +80,29 @@ class Console
             return $input;
         }
     }
+
+    public static function confirm(string $question): bool
+    {
+        while (true) {
+
+            self::write($question . " (Y/n) ");
+
+            $input = strtolower(trim(fgets(STDIN)));
+
+            if ($input === '' || $input === 'y' || $input === 'yes') {
+                return true;
+            }
+
+            if ($input === 'n' || $input === 'no') {
+                return false;
+            }
+
+            self::error("Please enter Y or N.");
+        }
+    }
+
+    public static function separator(): void
+    {
+        self::line(str_repeat("-", 40));
+    }
 }
