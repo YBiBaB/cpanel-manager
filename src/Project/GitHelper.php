@@ -2,27 +2,35 @@
 
 namespace Cpm\Project;
 
+use Cpm\System\CommandRunner;
+
 class GitHelper
 {
-    public function getCurrentBranch(string $path): ?string
-    {
-        $currentPath = getcwd();
+    public function getCurrentBranch(
+        string $path
+    ): ?string {
 
-        chdir($path);
+        $commandRunner = new CommandRunner();
 
-        exec(
-            "git branch --show-current",
-            $output,
-            $code
+        $commandRunner->setWorkingDirectory(
+            $path
         );
 
-        chdir($currentPath);
+        $result = $commandRunner->run(
+            "git branch --show-current"
+        );
 
 
-        if ($code !== 0 || empty($output)) {
+        if (
+            !$result['success']
+            || empty($result['output'])
+        ) {
             return null;
         }
 
-        return trim($output[0]);
+
+        return trim(
+            $result['output'][0]
+        );
     }
 }
