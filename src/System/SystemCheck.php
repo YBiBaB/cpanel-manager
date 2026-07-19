@@ -14,7 +14,13 @@ class SystemCheck
 
         $this->checkPhp();
 
+        $this->checkApache();
+
+        $this->checkDatabase();
+
         $this->checkGit();
+
+        $this->checkGitCredential();
 
         $this->checkComposer();
 
@@ -22,7 +28,6 @@ class SystemCheck
 
         return $this->passed;
     }
-
 
     private function checkPhp(): void
     {
@@ -36,30 +41,152 @@ class SystemCheck
         }
     }
 
+    private function checkApache(): void
+    {
+        $result = $this->checkCommand(
+            "apache2 -v",
+            "Apache is not installed.",
+            false,
+            true
+        );
+
+
+        if ($result !== null) {
+            return;
+        }
+
+
+        $result = $this->checkCommand(
+            "httpd -v",
+            "Apache is not installed.",
+            false,
+            true
+        );
+
+
+        if ($result !== null) {
+            return;
+        }
+
+
+        Console::warning(
+            "Apache is not installed."
+        );
+    }
+
+    private function checkDatabase(): void
+    {
+        $this->checkCommand(
+            "mysql --version",
+            "MySQL/MariaDB client is not installed.",
+            false
+        );
+    }
 
     private function checkGit(): void
     {
-        exec("git --version", $output, $code);
+        $commandRunner = new CommandRunner();
 
-        if ($code === 0) {
-            Console::success(implode('', $output));
-        } else {
-            Console::error("Git is not installed.");
-            $this->passed = false;
+        $result = $commandRunner->run(
+            "git --version"
+        );
+
+        if ($result['success']) {
+
+            Console::success(
+                implode(
+                    "",
+                    $result['output']
+                )
+            );
+
+            return;
         }
+
+        Console::error(
+            "Git is not installed."
+        );
+
+        $this->passed = false;
     }
 
+    private function checkGitCredential(): void
+    {
+        $commandRunner = new CommandRunner();
+
+        // Check current effective credential helper
+        $result = $commandRunner->run(
+            "git config --get credential.helper"
+        );
+
+        if (
+            $result['success']
+            && !empty($result['output'])
+        ) {
+
+            Console::success(
+                "Git credential helper: "
+                . $result['output'][0]
+            );
+
+            return;
+        }
+
+        Console::warning(
+            "Git credential helper is not configured."
+        );
+
+        if (
+            !Console::confirm(
+                "Configure credential.helper store?"
+            )
+        ) {
+            return;
+        }
+
+        // Configure global helper
+        $result = $commandRunner->run(
+            "git config --global credential.helper store"
+        );
+
+        if (!$result['success']) {
+
+            Console::error(
+                "Failed to configure Git credential helper."
+            );
+
+            return;
+        }
+
+        // Verify effective configuration
+        $result = $commandRunner->run(
+            "git config --get credential.helper"
+        );
+
+        if (
+            $result['success']
+            && !empty($result['output'])
+        ) {
+
+            Console::success(
+                "Git credential helper: "
+                . $result['output'][0]
+            );
+
+            return;
+        }
+
+        Console::warning(
+            "Git credential helper configuration could not be verified."
+        );
+    }
 
     private function checkComposer(): void
     {
-        exec("composer --version", $output, $code);
-
-        if ($code === 0) {
-            Console::success($output[0]);
-        } else {
-            Console::error("Composer is not installed.");
-            $this->passed = false;
-        }
+        $this->checkCommand(
+            "composer --version",
+            "Composer is not installed."
+        );
     }
 
 
@@ -80,5 +207,51 @@ class SystemCheck
                 $this->passed = false;
             }
         }
+    }
+
+    private function checkCommand(
+        string $command,
+        string $errorMessage,
+        bool $required = true,
+        bool $silent = false
+    ): ?array {
+
+        $commandRunner = new CommandRunner();
+
+        $result = $commandRunner->run(
+            $command
+        );
+
+
+        if ($result['success']) {
+
+            Console::success(
+                $result['output'][0]
+            );
+
+            return $result;
+        }
+
+
+        if (!$silent) {
+
+            if ($required) {
+
+                Console::error(
+                    $errorMessage
+                );
+
+                $this->passed = false;
+
+            } else {
+
+                Console::warning(
+                    $errorMessage
+                );
+            }
+        }
+
+
+        return null;
     }
 }
