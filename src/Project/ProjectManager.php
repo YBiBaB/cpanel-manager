@@ -5,6 +5,7 @@ namespace Cpm\Project;
 use Cpm\UI\Console;
 use RuntimeException;
 use Cpm\Config\ConfigManager;
+use Cpm\Utils\Uuid;
 
 class ProjectManager
 {
@@ -114,13 +115,13 @@ class ProjectManager
          * Build configuration
          */
         $config = [
-            'version' => 1,
+            'projectId' => Uuid::generate(),
 
-            'projectName' =>
-                $project['projectName'],
+            'configVersion' => 1,
 
-            'repositories' =>
-                $repositories,
+            'projectName' => $project['projectName'],
+
+            'repositories' => $repositories,
         ];
 
         /*
@@ -220,6 +221,16 @@ class ProjectManager
         Console::line(
             "\nProject Name: " .
             $config['projectName']
+        );
+
+        Console::line(
+            "Project ID: " .
+            $config['projectId']
+        );
+
+        Console::line(
+            "Config Version: " .
+            $config['configVersion']
         );
 
         Console::line();
