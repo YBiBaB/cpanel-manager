@@ -11,7 +11,7 @@ class Menu
             Console::line("");
 
             Console::line("1. Add Project");
-            Console::line("2. Open Project");
+            Console::line("2. Projects");
             Console::line("3. Settings");
             Console::line("0. Exit");
 
@@ -37,9 +37,10 @@ class Menu
 
                 case "2":
 
-                    Console::info(
-                        "Open Project selected."
-                    );
+                    $projectsMenu =
+                        new ProjectsMenu();
+
+                    $projectsMenu->show();
 
                     break;
 
