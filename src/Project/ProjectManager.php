@@ -5,6 +5,7 @@ namespace Cpm\Project;
 use Cpm\UI\Console;
 use RuntimeException;
 use Cpm\Config\ConfigManager;
+use Cpm\Registry\RegistryManager;
 use Cpm\Utils\Uuid;
 
 class ProjectManager
@@ -161,12 +162,40 @@ class ProjectManager
             return;
         }
 
+        /*
+         * Register project
+         */
+        try {
+
+            $registry = new RegistryManager();
+
+
+            $registry->addProject(
+                $config['projectId'],
+                $config['projectName'],
+                $project['projectPath']
+            );
+
+
+        } catch (RuntimeException $e) {
+
+            Console::error(
+                "Failed to register project."
+            );
+
+            return;
+        }
+
 
         Console::separator();
 
 
         Console::success(
             "Project configuration saved."
+        );
+
+        Console::success(
+            "Project registered successfully."
         );
 
 
