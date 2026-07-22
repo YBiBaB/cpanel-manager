@@ -49,11 +49,15 @@ class ProjectManager
             . "config.json";
 
 
-        if (
-            !$this->checkExistingConfiguration(
-                $configPath
-            )
-        ) {
+        try {
+
+            $existingConfig =
+                $this->checkExistingConfiguration(
+                    $configPath
+                );
+
+        } catch (RuntimeException $e) {
+
             return;
         }
 
@@ -79,7 +83,11 @@ class ProjectManager
 
         $config =
             $this->buildProjectConfiguration(
-                $project
+
+                $project,
+
+                $existingConfig['projectId']
+                ?? null
             );
 
 
@@ -108,7 +116,7 @@ class ProjectManager
             $registry =
                 new RegistryManager();
 
-            $registry->addProject(
+            $registry->registerProject(
                 $config['projectId'],
                 $config['projectName'],
                 $project['projectPath']
@@ -145,20 +153,17 @@ class ProjectManager
 
     private function checkExistingConfiguration(
         string $configPath
-    ): bool {
-
+    ): ?array
+    {
         $configManager = new ConfigManager();
 
-
         if (!$configManager->exists($configPath)) {
-            return true;
+            return null;
         }
-
 
         Console::info(
             "Project configuration already exists."
         );
-
 
         if (
             !Console::confirm(
@@ -170,31 +175,31 @@ class ProjectManager
                 "Operation cancelled."
             );
 
-            return false;
+            throw new RuntimeException(
+                "Operation cancelled."
+            );
         }
-
 
         Console::line();
 
-        return true;
+        return $configManager->load(
+            $configPath
+        );
     }
 
     private function buildProjectConfiguration(
-        array $project
+        array $project,
+        ?string $projectId = null
     ): array {
 
         $repositories = [];
 
-
-        $configurator =
-            new RepositoryConfigurator();
-
+        $configurator = new RepositoryConfigurator();
 
         foreach (
             $project['repositories']
             as $repository
         ) {
-
             $repositories[] =
                 $configurator->configure(
                     $repository
@@ -204,16 +209,13 @@ class ProjectManager
 
         return [
 
-            'projectId' =>
-                Uuid::generate(),
+            'projectId' => $projectId ?? Uuid::generate(),
 
             'configVersion' => 1,
 
-            'projectName' =>
-                $project['projectName'],
+            'projectName' => $project['projectName'],
 
-            'repositories' =>
-                $repositories,
+            'repositories' => $repositories,
         ];
     }
 

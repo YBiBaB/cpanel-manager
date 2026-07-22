@@ -9,7 +9,7 @@ use Cpm\Registry\RegistryManager;
 $registry = new RegistryManager();
 
 
-$registry->addProject(
+$registry->registerProject(
     "123456",
     "test",
     realpath("../../")
@@ -18,18 +18,3 @@ $registry->addProject(
 print_r(
     $registry->findProjectById("123456")
 );
-
-$registry->updateProjectPath(
-    "123456",
-    realpath("../../FIT3047")
-);
-
-
-print_r(
-    $registry->getProjects()
-);
-
-print_r(
-    $registry->findProjectById("123456")
-);
-
