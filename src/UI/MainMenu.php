@@ -2,7 +2,7 @@
 
 namespace Cpm\UI;
 
-class Menu
+class MainMenu
 {
     public function show(): void
     {

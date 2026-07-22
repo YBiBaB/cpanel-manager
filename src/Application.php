@@ -3,7 +3,7 @@
 namespace Cpm;
 
 use Cpm\System\SystemCheck;
-use Cpm\UI\Menu;
+use Cpm\UI\MainMenu;
 use Cpm\UI\Console;
 
 class Application
@@ -22,7 +22,7 @@ class Application
             return;
         }
 
-        $menu = new Menu();
+        $menu = new MainMenu();
 
         $menu->show();
     }
