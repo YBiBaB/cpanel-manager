@@ -12,7 +12,9 @@ class ProjectManager
 {
     public function addExistingProject(): void
     {
-        Console::title("Add Existing Project");
+        Console::title(
+            "Add Existing Project"
+        );
 
 
         $projectPath = Console::ask(
@@ -24,8 +26,10 @@ class ProjectManager
 
             $scanner = new ProjectScanner();
 
-            $project = $scanner->scan($projectPath);
-
+            $project =
+                $scanner->scan(
+                    $projectPath
+                );
 
         } catch (RuntimeException $e) {
 
@@ -37,55 +41,33 @@ class ProjectManager
         }
 
 
-        /*
-         * Generate config path
-         */
         $configPath =
             $project['projectPath']
             . DIRECTORY_SEPARATOR
-            . '.cpm'
+            . ".cpm"
             . DIRECTORY_SEPARATOR
-            . 'config.json';
+            . "config.json";
 
 
-        /*
-         * Check existing configuration
-         */
-        $configManager = new ConfigManager();
-
-
-        if ($configManager->exists($configPath)) {
-
-            Console::info(
-                "Project configuration already exists."
-            );
-
-
-            if (!Console::confirm("Reconfigure project")) {
-
-                Console::info(
-                    "Operation cancelled."
-                );
-
-                return;
-            }
-
-
-            Console::info(
-                "Existing configuration will be overwritten."
-            );
-
-            Console::line();
+        if (
+            !$this->checkExistingConfiguration(
+                $configPath
+            )
+        ) {
+            return;
         }
 
 
-        /*
-         * Show scan result
-         */
-        $this->showScanResult($project);
+        $this->showScanResult(
+            $project
+        );
 
 
-        if (!Console::confirm("Continue")) {
+        if (
+            !Console::confirm(
+                "Continue"
+            )
+        ) {
 
             Console::info(
                 "Operation cancelled."
@@ -95,63 +77,21 @@ class ProjectManager
         }
 
 
-        /*
-         * Configure repositories
-         */
-        $repositories = [];
+        $config =
+            $this->buildProjectConfiguration(
+                $project
+            );
 
 
-        $configurator = new RepositoryConfigurator();
-
-
-        foreach ($project['repositories'] as $repository) {
-
-            $repositories[] =
-                $configurator->configure($repository);
-
-        }
-
-
-        /*
-         * Build configuration
-         */
-        $config = [
-            'projectId' => Uuid::generate(),
-
-            'configVersion' => 1,
-
-            'projectName' => $project['projectName'],
-
-            'repositories' => $repositories,
-        ];
-
-        /*
-         * Config file overwrite confirmation
-         */
-
-        if ($configManager->exists($configPath)) {
-
-            if (!Console::confirm("Overwrite existing configuration")) {
-
-                Console::info(
-                    "Operation cancelled."
-                );
-
-                return;
-            }
-        }
-
-
-        /*
-         * Save configuration
-         */
         try {
+
+            $configManager =
+                new ConfigManager();
 
             $configManager->save(
                 $configPath,
                 $config
             );
-
 
         } catch (RuntimeException $e) {
 
@@ -162,20 +102,17 @@ class ProjectManager
             return;
         }
 
-        /*
-         * Register project
-         */
+
         try {
 
-            $registry = new RegistryManager();
-
+            $registry =
+                new RegistryManager();
 
             $registry->addProject(
                 $config['projectId'],
                 $config['projectName'],
                 $project['projectPath']
             );
-
 
         } catch (RuntimeException $e) {
 
@@ -189,7 +126,6 @@ class ProjectManager
 
         Console::separator();
 
-
         Console::success(
             "Project configuration saved."
         );
@@ -198,7 +134,6 @@ class ProjectManager
             "Project registered successfully."
         );
 
-
         Console::line();
 
 
@@ -206,6 +141,80 @@ class ProjectManager
             $config,
             $configPath
         );
+    }
+
+    private function checkExistingConfiguration(
+        string $configPath
+    ): bool {
+
+        $configManager = new ConfigManager();
+
+
+        if (!$configManager->exists($configPath)) {
+            return true;
+        }
+
+
+        Console::info(
+            "Project configuration already exists."
+        );
+
+
+        if (
+            !Console::confirm(
+                "Overwrite existing configuration"
+            )
+        ) {
+
+            Console::info(
+                "Operation cancelled."
+            );
+
+            return false;
+        }
+
+
+        Console::line();
+
+        return true;
+    }
+
+    private function buildProjectConfiguration(
+        array $project
+    ): array {
+
+        $repositories = [];
+
+
+        $configurator =
+            new RepositoryConfigurator();
+
+
+        foreach (
+            $project['repositories']
+            as $repository
+        ) {
+
+            $repositories[] =
+                $configurator->configure(
+                    $repository
+                );
+        }
+
+
+        return [
+
+            'projectId' =>
+                Uuid::generate(),
+
+            'configVersion' => 1,
+
+            'projectName' =>
+                $project['projectName'],
+
+            'repositories' =>
+                $repositories,
+        ];
     }
 
     private function showScanResult(array $project): void
