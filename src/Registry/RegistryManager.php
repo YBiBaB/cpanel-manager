@@ -25,11 +25,11 @@ class RegistryManager
     {
         $registry = $this->load();
 
-        return $registry['projects'];
+        return $registry['projects'] ?? [];
     }
 
 
-    public function addProject(
+    public function registerProject(
         string $projectId,
         string $projectName,
         string $path
@@ -38,9 +38,15 @@ class RegistryManager
         $registry = $this->load();
 
 
-        foreach ($registry['projects'] as $project) {
+        foreach ($registry['projects'] as &$project) {
 
             if ($project['projectId'] === $projectId) {
+
+                $project['projectName'] = $projectName;
+
+                $project['path'] = $path;
+
+                $this->save($registry);
 
                 return;
             }
@@ -61,8 +67,6 @@ class RegistryManager
         $this->save($registry);
     }
 
-
-
     public function findProjectById(
         string $projectId
     ): ?array {
@@ -82,23 +86,29 @@ class RegistryManager
         return null;
     }
 
-
-
-    public function updateProjectPath(
-        string $projectId,
-        string $path
+    public function unregisterProject(
+        string $projectId
     ): bool {
 
         $registry = $this->load();
 
 
-        foreach ($registry['projects'] as &$project) {
+        foreach ($registry['projects'] as $index => $project) {
 
             if ($project['projectId'] === $projectId) {
 
-                $project['path'] = $path;
+                unset(
+                    $registry['projects'][$index]
+                );
 
-                $this->save($registry);
+                $registry['projects'] =
+                    array_values(
+                        $registry['projects']
+                    );
+
+                $this->save(
+                    $registry
+                );
 
                 return true;
             }
@@ -107,8 +117,6 @@ class RegistryManager
 
         return false;
     }
-
-
 
     private function load(): array
     {
