@@ -2,7 +2,7 @@
 
 namespace Cpm\UI;
 
-class ProjectActionMenu
+class ManageProjectMenu
 {
     public function show(array $project): void
     {
@@ -11,11 +11,12 @@ class ProjectActionMenu
             Console::line("");
 
             Console::title(
-                $project['projectName']
+                "Manage Project"
             );
 
-            Console::line("1. Open");
-            Console::line("2. Manage");
+            Console::line("1. Rename");
+            Console::line("2. Refresh Registration");
+            Console::line("3. Remove from CPM");
             Console::line("0. Back");
 
             Console::line("");
@@ -26,28 +27,31 @@ class ProjectActionMenu
 
                 case "1":
 
-                    $menu =
-                        new OpenProjectMenu();
-
-                    $menu->show($project);
+                    Console::info(
+                        "Coming soon."
+                    );
 
                     break;
-
 
                 case "2":
 
-                    $menu =
-                        new ManageProjectMenu();
-
-                    $menu->show($project);
+                    Console::info(
+                        "Coming soon."
+                    );
 
                     break;
 
+                case "3":
+
+                    Console::info(
+                        "Coming soon."
+                    );
+
+                    break;
 
                 case "0":
 
                     return;
-
 
                 default:
 
