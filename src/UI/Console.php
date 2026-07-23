@@ -105,4 +105,13 @@ class Console
     {
         self::line(str_repeat("-", 40));
     }
+
+    public static function pause(
+        string $message = "Press Enter to continue..."
+    ): void {
+
+        self::line();
+
+        readline($message);
+    }
 }
