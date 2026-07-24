@@ -2,6 +2,7 @@
 
 namespace Cpm\Project;
 
+use Cpm\Filesystem\Directory;
 use Cpm\UI\Console;
 use RuntimeException;
 use Cpm\Config\ConfigManager;
@@ -317,4 +318,59 @@ class ProjectManager
         Console::line();
     }
 
+    public function removeCpmDirectory(
+        array $project
+    ): void {
+
+        $path =
+            $project['path']
+            . DIRECTORY_SEPARATOR
+            . ".cpm";
+
+
+        if (!is_dir($path)) {
+
+            return;
+        }
+
+        $directory = new Directory();
+        $directory ->delete(
+            $path
+        );
+    }
+
+    public function deleteProject(
+        array $project
+    ): void {
+
+        $projectPath = $project['path'];
+
+        if (!is_dir($projectPath)) {
+
+            throw new RuntimeException(
+                "Project directory does not exist."
+            );
+        }
+
+        $directory = new Directory();
+        $directory->delete(
+            $projectPath
+        );
+
+
+        $registry = new RegistryManager();
+
+        $removed =
+            $registry->unregisterProject(
+                $project['projectId']
+            );
+
+
+        if (!$removed) {
+
+            throw new RuntimeException(
+                "Failed to remove project from registry."
+            );
+        }
+    }
 }

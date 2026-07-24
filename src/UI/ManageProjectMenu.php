@@ -2,6 +2,10 @@
 
 namespace Cpm\UI;
 
+use Cpm\Registry\RegistryManager;
+use Cpm\Project\ProjectManager;
+use RuntimeException;
+
 class ManageProjectMenu
 {
     public function show(array $project): void
@@ -17,6 +21,7 @@ class ManageProjectMenu
             Console::line("1. Rename");
             Console::line("2. Refresh Registration");
             Console::line("3. Remove from CPM");
+            Console::line("4. Delete Project");
             Console::line("0. Back");
 
             Console::line("");
@@ -43,11 +48,11 @@ class ManageProjectMenu
 
                 case "3":
 
-                    Console::info(
-                        "Coming soon."
+                    $this->removeFromCpm(
+                        $project
                     );
 
-                    break;
+                    return;
 
                 case "0":
 
@@ -55,10 +60,165 @@ class ManageProjectMenu
 
                 default:
 
-                    Console::error(
-                        "Invalid option."
+                    $this->deleteProject(
+                        $project
                     );
+
+                    return;
             }
         }
+    }
+
+    private function removeFromCpm(
+        array $project
+    ): void {
+
+        Console::warning(
+            "This project will no longer be managed by CPM."
+        );
+
+        Console::warning(
+            "Your project files will NOT be deleted."
+        );
+
+        Console::line();
+
+
+        $removeMetadata =
+            Console::confirm(
+                "Remove CPM metadata (.cpm)?"
+            );
+
+
+        Console::line();
+
+
+        if (
+            !Console::confirm(
+                "Continue"
+            )
+        ) {
+
+            Console::info(
+                "Operation cancelled."
+            );
+
+            return;
+        }
+
+
+        $registry = new RegistryManager();
+        $projectManager = new ProjectManager();
+
+
+        if (
+            !$registry->unregisterProject(
+                $project['projectId']
+            )
+        ) {
+
+            Console::error(
+                "Failed to unregister project."
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
+        if ($removeMetadata) {
+
+            $projectManager->removeCpmDirectory(
+                $project
+            );
+        }
+
+
+        Console::success(
+            "Project removed from CPM."
+        );
+
+        Console::pause();
+    }
+
+    private function deleteProject(
+        array $project
+    ): void {
+
+        Console::warning(
+            "This will permanently delete the project."
+        );
+
+        Console::warning(
+            "All files will be removed."
+        );
+
+        Console::line();
+
+
+        if (
+            !Console::confirm(
+                "Continue?"
+            )
+        ) {
+
+            Console::info(
+                "Operation cancelled."
+            );
+
+            return;
+        }
+
+
+        $confirm =
+            Console::ask(
+                "Type project name to confirm"
+            );
+
+
+        if (
+            $confirm !==
+            $project['projectName']
+        ) {
+
+            Console::error(
+                "Project name does not match."
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
+        try {
+
+            $manager =
+                new ProjectManager();
+
+
+            $manager->deleteProject(
+                $project
+            );
+
+
+        } catch (RuntimeException $e) {
+
+            Console::error(
+                $e->getMessage()
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
+        Console::success(
+            "Project deleted."
+        );
+
+        Console::pause();
     }
 }
