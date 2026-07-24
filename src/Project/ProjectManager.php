@@ -145,11 +145,12 @@ class ProjectManager
 
         Console::line();
 
-
         $this->showProjectSummary(
             $config,
             $configPath
         );
+
+        Console::pause();
     }
 
     private function checkExistingConfiguration(
@@ -217,6 +218,91 @@ class ProjectManager
             'projectName' => $project['projectName'],
 
             'repositories' => $repositories,
+        ];
+    }
+
+    private function validateRegistration(
+        array $registryProject
+    ): array {
+
+        if (
+            !isset($registryProject['path'])
+            ||
+            !is_dir($registryProject['path'])
+        ) {
+
+            return [
+                'valid' => false,
+                'reason' => 'Project path does not exist.'
+            ];
+        }
+
+
+        $configPath =
+            $registryProject['path']
+            . DIRECTORY_SEPARATOR
+            . ".cpm"
+            . DIRECTORY_SEPARATOR
+            . "config.json";
+
+
+        $configManager =
+            new ConfigManager();
+
+
+        if (
+            !$configManager->exists($configPath)
+        ) {
+
+            return [
+                'valid' => false,
+                'reason' => 'CPM configuration not found.'
+            ];
+        }
+
+
+        try {
+
+            $config =
+                $configManager->load(
+                    $configPath
+                );
+
+        } catch (RuntimeException $e) {
+
+            return [
+                'valid' => false,
+                'reason' => 'Invalid CPM configuration.'
+            ];
+        }
+
+
+        if (
+            !isset($config['projectId'])
+        ) {
+
+            return [
+                'valid' => false,
+                'reason' => 'Missing project ID.'
+            ];
+        }
+
+
+        if (
+            $config['projectId']
+            !==
+            $registryProject['projectId']
+        ) {
+
+            return [
+                'valid' => false,
+                'reason' => 'Project ID mismatch.'
+            ];
+        }
+
+
+        return [
+            'valid' => true
         ];
     }
 
