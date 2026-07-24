@@ -26,6 +26,12 @@ class ProjectSelector
                 "No projects found."
             );
 
+            Console::info(
+                "Use 'Add Project' to register a project."
+            );
+
+            Console::pause();
+
             return null;
         }
 
