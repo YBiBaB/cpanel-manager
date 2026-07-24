@@ -39,7 +39,17 @@ class ProjectActionMenu
                     $menu =
                         new ManageProjectMenu();
 
-                    $menu->show($project);
+
+                    $changed =
+                        $menu->show(
+                            $project
+                        );
+
+
+                    if ($changed) {
+
+                        return;
+                    }
 
                     break;
 

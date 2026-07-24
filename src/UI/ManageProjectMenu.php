@@ -8,7 +8,7 @@ use RuntimeException;
 
 class ManageProjectMenu
 {
-    public function show(array $project): void
+    public function show(array $project): bool
     {
         while (true) {
 
@@ -52,19 +52,27 @@ class ManageProjectMenu
                         $project
                     );
 
-                    return;
+                    return true;
 
-                case "0":
-
-                    return;
-
-                default:
+                case "4":
 
                     $this->deleteProject(
                         $project
                     );
 
-                    return;
+                    return true;
+
+                case "0":
+
+                    return false;
+
+                default:
+
+                    Console::error(
+                        "Invalid option."
+                    );
+
+                    return false;
             }
         }
     }
