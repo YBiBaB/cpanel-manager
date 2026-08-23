@@ -48,19 +48,29 @@ class ManageProjectMenu
 
                 case "3":
 
-                    $this->removeFromCpm(
-                        $project
-                    );
+                    if (
+                        $this->removeFromCpm(
+                            $project
+                        )
+                    ) {
 
-                    return true;
+                        return true;
+                    }
+
+                    break;
 
                 case "4":
 
-                    $this->deleteProject(
-                        $project
-                    );
+                    if (
+                        $this->deleteProject(
+                            $project
+                        )
+                    ) {
 
-                    return true;
+                        return true;
+                    }
+
+                    break;
 
                 case "0":
 
@@ -79,7 +89,7 @@ class ManageProjectMenu
 
     private function removeFromCpm(
         array $project
-    ): void {
+    ): bool {
 
         Console::warning(
             "This project will no longer be managed by CPM."
@@ -92,26 +102,13 @@ class ManageProjectMenu
         Console::line();
 
 
-        $removeMetadata =
-            Console::confirm(
-                "Remove CPM metadata (.cpm)?"
-            );
-
-
-        Console::line();
-
-
         if (
             !Console::confirm(
-                "Continue"
+                "Remove CPM metadata (.cpm)?"
             )
         ) {
 
-            Console::info(
-                "Operation cancelled."
-            );
-
-            return;
+            return false;
         }
 
 
@@ -131,16 +128,13 @@ class ManageProjectMenu
 
             Console::pause();
 
-            return;
+            return false;
         }
 
 
-        if ($removeMetadata) {
-
-            $projectManager->removeCpmDirectory(
-                $project
-            );
-        }
+        $projectManager->removeCpmDirectory(
+            $project
+        );
 
 
         Console::success(
@@ -148,11 +142,13 @@ class ManageProjectMenu
         );
 
         Console::pause();
+
+        return true;
     }
 
     private function deleteProject(
         array $project
-    ): void {
+    ): bool {
 
         Console::warning(
             "This will permanently delete the project."
@@ -175,7 +171,7 @@ class ManageProjectMenu
                 "Operation cancelled."
             );
 
-            return;
+            return false;
         }
 
 
@@ -196,7 +192,7 @@ class ManageProjectMenu
 
             Console::pause();
 
-            return;
+            return false;
         }
 
 
@@ -219,7 +215,7 @@ class ManageProjectMenu
 
             Console::pause();
 
-            return;
+            return false;
         }
 
 
@@ -228,5 +224,7 @@ class ManageProjectMenu
         );
 
         Console::pause();
+
+        return true;
     }
 }
