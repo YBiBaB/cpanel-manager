@@ -21,9 +21,10 @@ class ManageProjectMenu
 
             Console::line("1. Rename");
             Console::line("2. Refresh Registration");
-            Console::line("3. Repair Path");
-            Console::line("4. Remove from CPM");
-            Console::line("5. Delete Project");
+            Console::line("3. Branch Management");
+            Console::line("4. Repair Path");
+            Console::line("5. Remove from CPM");
+            Console::line("6. Delete Project");
             Console::line("0. Back");
 
             Console::line("");
@@ -50,13 +51,24 @@ class ManageProjectMenu
 
                 case "3":
 
-                    $this->repairPath(
+                    $menu =
+                        new BranchManagementMenu();
+
+                    $menu->show(
                         $project
                     );
 
                     break;
 
                 case "4":
+
+                    $this->repairPath(
+                        $project
+                    );
+
+                    break;
+
+                case "5":
 
                     if (
                         $this->removeFromCpm(
@@ -69,7 +81,7 @@ class ManageProjectMenu
 
                     break;
 
-                case "5":
+                case "6":
 
                     if (
                         $this->deleteProject(
