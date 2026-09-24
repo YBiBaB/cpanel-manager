@@ -272,6 +272,14 @@ class BranchManagementMenu
                     $remoteUrl
                 );
 
+            Console::success(
+                "Branch directory ready."
+            );
+
+            Console::success(
+                "Production composer install completed."
+            );
+
         } catch (RuntimeException $e) {
 
             Console::error(

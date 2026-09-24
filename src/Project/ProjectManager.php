@@ -693,6 +693,11 @@ class ProjectManager
             }
 
 
+            $this->installProductionDependencies(
+                $resolved
+            );
+
+
             return $resolved;
         }
 
@@ -720,7 +725,24 @@ class ProjectManager
         }
 
 
+        $this->installProductionDependencies(
+            $resolved
+        );
+
+
         return $resolved;
+    }
+
+    private function installProductionDependencies(
+        string $path
+    ): void {
+
+        $composerHelper =
+            new ComposerHelper();
+
+        $composerHelper->installProduction(
+            $path
+        );
     }
 
     public function appendRepository(
