@@ -4,5 +4,7 @@
 
 .DS_Store
 
+FEATURES.md
+
 /storage/logs/*
 !/storage/logs/.gitkeep

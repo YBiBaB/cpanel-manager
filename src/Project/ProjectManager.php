@@ -63,6 +63,26 @@ class ProjectManager
         }
 
 
+        $this->refreshRegistration(
+            $project,
+            $existingConfig['projectId']
+            ?? null
+        );
+    }
+
+    public function refreshRegistration(
+        array $project,
+        ?string $projectId = null
+    ): bool {
+
+        $configPath =
+            $project['projectPath']
+            . DIRECTORY_SEPARATOR
+            . ".cpm"
+            . DIRECTORY_SEPARATOR
+            . "config.json";
+
+
         $this->showScanResult(
             $project
         );
@@ -78,17 +98,14 @@ class ProjectManager
                 "Operation cancelled."
             );
 
-            return;
+            return false;
         }
 
 
         $config =
             $this->buildProjectConfiguration(
-
                 $project,
-
-                $existingConfig['projectId']
-                ?? null
+                $projectId
             );
 
 
@@ -108,7 +125,7 @@ class ProjectManager
                 $e->getMessage()
             );
 
-            return;
+            return false;
         }
 
 
@@ -129,7 +146,7 @@ class ProjectManager
                 "Failed to register project."
             );
 
-            return;
+            return false;
         }
 
 
@@ -151,6 +168,8 @@ class ProjectManager
         );
 
         Console::pause();
+
+        return true;
     }
 
     private function checkExistingConfiguration(

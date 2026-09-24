@@ -4,6 +4,7 @@ namespace Cpm\UI;
 
 use Cpm\Registry\RegistryManager;
 use Cpm\Project\ProjectManager;
+use Cpm\Project\ProjectScanner;
 use RuntimeException;
 
 class ManageProjectMenu
@@ -40,8 +41,8 @@ class ManageProjectMenu
 
                 case "2":
 
-                    Console::info(
-                        "Coming soon."
+                    $this->refreshRegistration(
+                        $project
                     );
 
                     break;
@@ -85,6 +86,44 @@ class ManageProjectMenu
                     return false;
             }
         }
+    }
+
+    private function refreshRegistration(
+        array $project
+    ): void {
+
+        Console::title(
+            "Refresh Registration"
+        );
+
+
+        try {
+
+            $scanner = new ProjectScanner();
+
+            $scanned =
+                $scanner->scan(
+                    $project['path']
+                );
+
+        } catch (RuntimeException $e) {
+
+            Console::error(
+                $e->getMessage()
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
+        $manager = new ProjectManager();
+
+        $manager->refreshRegistration(
+            $scanned,
+            $project['projectId']
+        );
     }
 
     private function removeFromCpm(
