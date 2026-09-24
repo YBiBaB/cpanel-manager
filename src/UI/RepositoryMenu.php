@@ -47,11 +47,13 @@ class RepositoryMenu
 
                 case "1":
 
-                    Console::info(
-                        "Coming soon."
-                    );
+                    $menu =
+                        new GitMenu();
 
-                    Console::pause();
+                    $menu->show(
+                        $project,
+                        $repository
+                    );
 
                     break;
 

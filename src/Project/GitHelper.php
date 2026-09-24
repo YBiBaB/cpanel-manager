@@ -102,6 +102,31 @@ class GitHelper
 
 
     /**
+     * @return string[]
+     */
+    public function status(
+        string $path
+    ): array {
+
+        $result = $this->runIn(
+            $path,
+            "git status"
+        );
+
+
+        if (!$result['success']) {
+
+            throw new RuntimeException(
+                "Git status failed."
+            );
+        }
+
+
+        return $result['output'];
+    }
+
+
+    /**
      * @return string[] branch names without remote prefix
      */
     public function listRemoteBranches(
