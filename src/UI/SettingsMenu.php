@@ -2,12 +2,19 @@
 
 namespace Cpm\UI;
 
+use Cpm\Registry\RegistryManager;
+use Cpm\System\HomeDirectory;
+use Cpm\System\SystemCheck;
+use RuntimeException;
 
 class SettingsMenu
 {
+    private const VERSION = 'v0.1.0';
+
+
     public function show(): void
     {
-        while(true){
+        while (true) {
 
             Console::title(
                 "Settings"
@@ -32,22 +39,18 @@ class SettingsMenu
             );
 
 
-            switch($choice){
+            switch ($choice) {
 
                 case "1":
 
-                    Console::info(
-                        "System check selected."
-                    );
+                    $this->runSystemCheck();
 
                     break;
 
 
                 case "2":
 
-                    Console::info(
-                        "Information selected."
-                    );
+                    $this->showCpmInformation();
 
                     break;
 
@@ -64,5 +67,113 @@ class SettingsMenu
                     );
             }
         }
+    }
+
+    private function runSystemCheck(): void
+    {
+        $systemCheck = new SystemCheck();
+
+        if (!$systemCheck->check()) {
+
+            Console::error(
+                "System check failed."
+            );
+
+        }
+
+        Console::pause();
+    }
+
+    private function showCpmInformation(): void
+    {
+        Console::title(
+            "CPM Information"
+        );
+
+        Console::line(
+            "Name       : CPanel Manager"
+        );
+
+        Console::line(
+            "Version    : " . self::VERSION
+        );
+
+        Console::line(
+            "PHP        : " . PHP_VERSION
+        );
+
+
+        try {
+
+            $home = HomeDirectory::get();
+
+        } catch (RuntimeException $e) {
+
+            Console::error(
+                $e->getMessage()
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
+        Console::line(
+            "Home       : " . $home
+        );
+
+
+        $registry = new RegistryManager();
+
+        $registryPath =
+            $registry->getRegistryPath();
+
+
+        Console::line(
+            "Registry   : " . $registryPath
+        );
+
+        Console::line(
+            "Exists     : "
+            . (
+                file_exists($registryPath)
+                    ? "yes"
+                    : "no"
+            )
+        );
+
+
+        $projects =
+            $registry->getProjects();
+
+        Console::line(
+            "Projects   : "
+            . count($projects)
+        );
+
+
+        if (!empty($projects)) {
+
+            Console::line();
+
+            Console::info(
+                "Registered projects:"
+            );
+
+            foreach ($projects as $project) {
+
+                Console::line(
+                    "- "
+                    . $project['projectName']
+                    . " ("
+                    . $project['path']
+                    . ")"
+                );
+            }
+        }
+
+
+        Console::pause();
     }
 }

@@ -29,6 +29,12 @@ class RegistryManager
     }
 
 
+    public function getRegistryPath(): string
+    {
+        return $this->registryPath;
+    }
+
+
     public function registerProject(
         string $projectId,
         string $projectName,

@@ -47,9 +47,10 @@ class MainMenu
 
                 case "3":
 
-                    Console::info(
-                        "Settings selected."
-                    );
+                    $settingsMenu =
+                        new SettingsMenu();
+
+                    $settingsMenu->show();
 
                     break;
 
