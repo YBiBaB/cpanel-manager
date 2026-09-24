@@ -66,13 +66,16 @@ class ProjectManager
         $this->refreshRegistration(
             $project,
             $existingConfig['projectId']
+            ?? null,
+            $existingConfig['projectName']
             ?? null
         );
     }
 
     public function refreshRegistration(
         array $project,
-        ?string $projectId = null
+        ?string $projectId = null,
+        ?string $projectName = null
     ): bool {
 
         $configPath =
@@ -105,7 +108,8 @@ class ProjectManager
         $config =
             $this->buildProjectConfiguration(
                 $project,
-                $projectId
+                $projectId,
+                $projectName
             );
 
 
@@ -210,7 +214,8 @@ class ProjectManager
 
     private function buildProjectConfiguration(
         array $project,
-        ?string $projectId = null
+        ?string $projectId = null,
+        ?string $projectName = null
     ): array {
 
         $repositories = [];
@@ -234,10 +239,60 @@ class ProjectManager
 
             'configVersion' => 1,
 
-            'projectName' => $project['projectName'],
+            'projectName' =>
+                $projectName
+                ?? $project['projectName'],
 
             'repositories' => $repositories,
         ];
+    }
+
+    public function renameProject(
+        array $project,
+        string $newName
+    ): void {
+
+        $configPath =
+            $project['path']
+            . DIRECTORY_SEPARATOR
+            . ".cpm"
+            . DIRECTORY_SEPARATOR
+            . "config.json";
+
+
+        $configManager = new ConfigManager();
+
+
+        if (!$configManager->exists($configPath)) {
+
+            throw new RuntimeException(
+                "CPM configuration not found."
+            );
+        }
+
+
+        $config =
+            $configManager->load(
+                $configPath
+            );
+
+
+        $config['projectName'] = $newName;
+
+
+        $configManager->save(
+            $configPath,
+            $config
+        );
+
+
+        $registry = new RegistryManager();
+
+        $registry->registerProject(
+            $project['projectId'],
+            $newName,
+            $project['path']
+        );
     }
 
     private function validateRegistration(

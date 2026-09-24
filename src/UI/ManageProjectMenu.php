@@ -9,7 +9,7 @@ use RuntimeException;
 
 class ManageProjectMenu
 {
-    public function show(array $project): bool
+    public function show(array &$project): bool
     {
         while (true) {
 
@@ -33,8 +33,8 @@ class ManageProjectMenu
 
                 case "1":
 
-                    Console::info(
-                        "Coming soon."
+                    $this->renameProject(
+                        $project
                     );
 
                     break;
@@ -122,8 +122,103 @@ class ManageProjectMenu
 
         $manager->refreshRegistration(
             $scanned,
-            $project['projectId']
+            $project['projectId'],
+            $project['projectName']
         );
+    }
+
+    private function renameProject(
+        array &$project
+    ): void {
+
+        Console::title(
+            "Rename Project"
+        );
+
+        Console::line(
+            "Current name: "
+            . $project['projectName']
+        );
+
+        Console::line();
+
+
+        $newName = Console::ask(
+            "New name"
+        );
+
+
+        if (
+            $newName
+            ===
+            $project['projectName']
+        ) {
+
+            Console::info(
+                "Name unchanged."
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
+        Console::line();
+
+
+        if (
+            !Console::confirm(
+                "Rename '"
+                . $project['projectName']
+                . "' to '"
+                . $newName
+                . "'"
+            )
+        ) {
+
+            Console::info(
+                "Operation cancelled."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            $manager =
+                new ProjectManager();
+
+            $manager->renameProject(
+                $project,
+                $newName
+            );
+
+        } catch (RuntimeException $e) {
+
+            Console::error(
+                $e->getMessage()
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
+        $project['projectName'] = $newName;
+
+
+        Console::success(
+            "Project renamed successfully."
+        );
+
+        Console::info(
+            "Project directory was not changed."
+        );
+
+        Console::pause();
     }
 
     private function removeFromCpm(

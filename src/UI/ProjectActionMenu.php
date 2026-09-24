@@ -4,7 +4,7 @@ namespace Cpm\UI;
 
 class ProjectActionMenu
 {
-    public function show(array $project): void
+    public function show(array &$project): void
     {
         while (true) {
 
