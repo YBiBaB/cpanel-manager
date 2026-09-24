@@ -76,26 +76,51 @@ class GitHelper
         if (!$result['success']) {
 
             throw new RuntimeException(
-                "Git fetch failed."
+                $this->formatFailure(
+                    "Git fetch failed.",
+                    $result['output']
+                )
             );
         }
     }
 
 
     public function pull(
-        string $path
+        string $path,
+        ?string $branch = null,
+        string $remote = 'origin'
     ): void {
+
+        if (
+            $branch !== null
+            && $branch !== ''
+        ) {
+
+            $command =
+                "git pull "
+                . escapeshellarg($remote)
+                . " "
+                . escapeshellarg($branch);
+
+        } else {
+
+            $command = "git pull";
+        }
+
 
         $result = $this->runIn(
             $path,
-            "git pull"
+            $command
         );
 
 
         if (!$result['success']) {
 
             throw new RuntimeException(
-                "Git pull failed."
+                $this->formatFailure(
+                    "Git pull failed.",
+                    $result['output']
+                )
             );
         }
     }
@@ -117,12 +142,29 @@ class GitHelper
         if (!$result['success']) {
 
             throw new RuntimeException(
-                "Git status failed."
+                $this->formatFailure(
+                    "Git status failed.",
+                    $result['output']
+                )
             );
         }
 
 
         return $result['output'];
+    }
+
+
+    public function hasCommits(
+        string $path
+    ): bool {
+
+        $result = $this->runIn(
+            $path,
+            "git rev-parse --verify HEAD"
+        );
+
+
+        return $result['success'];
     }
 
 
@@ -268,5 +310,32 @@ class GitHelper
         return $commandRunner->run(
             $command
         );
+    }
+
+
+    /**
+     * @param string[] $output
+     */
+    private function formatFailure(
+        string $message,
+        array $output
+    ): string {
+
+        $detail = trim(
+            implode(
+                PHP_EOL,
+                $output
+            )
+        );
+
+
+        if ($detail === '') {
+            return $message;
+        }
+
+
+        return $message
+            . PHP_EOL
+            . $detail;
     }
 }

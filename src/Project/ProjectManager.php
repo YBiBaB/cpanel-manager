@@ -678,7 +678,8 @@ class ProjectManager
 
 
             $gitHelper->pull(
-                $targetPath
+                $targetPath,
+                $branchName
             );
 
 
@@ -710,7 +711,8 @@ class ProjectManager
 
 
         $gitHelper->pull(
-            $targetPath
+            $targetPath,
+            $branchName
         );
 
 

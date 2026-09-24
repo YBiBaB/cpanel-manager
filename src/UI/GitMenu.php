@@ -132,7 +132,8 @@ class GitMenu
                 case "3":
 
                     $this->pull(
-                        $path
+                        $path,
+                        $configuredBranch
                     );
 
                     break;
@@ -241,7 +242,8 @@ class GitMenu
     }
 
     private function pull(
-        string $path
+        string $path,
+        string $configuredBranch
     ): void {
 
         Console::title(
@@ -256,7 +258,10 @@ class GitMenu
             );
 
             (new GitHelper())->pull(
-                $path
+                $path,
+                $configuredBranch !== ''
+                    ? $configuredBranch
+                    : null
             );
 
         } catch (RuntimeException $e) {

@@ -58,7 +58,7 @@ class CommandRunner
 
 
         exec(
-            $fullCommand,
+            $fullCommand . " 2>&1",
             $output,
             $code
         );

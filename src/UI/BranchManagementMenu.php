@@ -22,15 +22,19 @@ class BranchManagementMenu
             );
 
             Console::line(
-                "1. Add Branch"
+                "1. List Environments"
             );
 
             Console::line(
-                "2. Remove Branch Registration"
+                "2. Add Branch"
             );
 
             Console::line(
-                "3. Delete Branch"
+                "3. Remove Branch Registration"
+            );
+
+            Console::line(
+                "4. Delete Branch"
             );
 
             Console::line(
@@ -49,7 +53,7 @@ class BranchManagementMenu
 
                 case "1":
 
-                    $this->addBranch(
+                    $this->listEnvironments(
                         $project
                     );
 
@@ -58,7 +62,7 @@ class BranchManagementMenu
 
                 case "2":
 
-                    $this->removeBranchRegistration(
+                    $this->addBranch(
                         $project
                     );
 
@@ -66,6 +70,15 @@ class BranchManagementMenu
 
 
                 case "3":
+
+                    $this->removeBranchRegistration(
+                        $project
+                    );
+
+                    break;
+
+
+                case "4":
 
                     $this->deleteBranch(
                         $project
@@ -86,6 +99,207 @@ class BranchManagementMenu
                     );
             }
         }
+    }
+
+    private function listEnvironments(
+        array $project
+    ): void {
+
+        Console::title(
+            "Environments"
+        );
+
+
+        $config =
+            $this->loadConfig(
+                $project
+            );
+
+
+        if ($config === null) {
+
+            return;
+        }
+
+
+        $repositories =
+            $config['repositories'] ?? [];
+
+
+        if (empty($repositories)) {
+
+            Console::warning(
+                "No environments registered."
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
+        $gitHelper = new GitHelper();
+
+
+        Console::line(
+            "Project: "
+            . ($project['projectName'] ?? '')
+        );
+
+        Console::line();
+
+
+        foreach (
+            $repositories
+            as $index => $repository
+        ) {
+
+            $folder =
+                $repository['folder']
+                ?? '(unknown)';
+
+            $configuredBranch =
+                $repository['branch']
+                ?? '';
+
+            $path =
+                $repository['path']
+                ?? '';
+
+
+            $currentBranch = null;
+            $status = 'OK';
+
+
+            if (
+                $path === ''
+                || !is_dir($path)
+            ) {
+
+                $status = 'MISSING';
+
+            } elseif (
+                !is_dir(
+                    $path
+                    . DIRECTORY_SEPARATOR
+                    . '.git'
+                )
+            ) {
+
+                $status = 'NO GIT';
+
+            } else {
+
+                if (
+                    !$gitHelper->hasCommits(
+                        $path
+                    )
+                ) {
+
+                    $status = 'EMPTY';
+
+                    $currentBranch =
+                        $gitHelper->getCurrentBranch(
+                            $path
+                        );
+
+                } else {
+
+                    $currentBranch =
+                        $gitHelper->getCurrentBranch(
+                            $path
+                        );
+
+
+                    if ($currentBranch === null) {
+
+                        $status = 'UNKNOWN';
+
+                    } elseif (
+                        $configuredBranch !== ''
+                        && $configuredBranch
+                            !== $currentBranch
+                    ) {
+
+                        $status = 'MISMATCH';
+                    }
+                }
+            }
+
+
+            Console::separator();
+
+            Console::line(
+                ($index + 1)
+                . ". "
+                . $folder
+                . "  ["
+                . $status
+                . "]"
+            );
+
+            Console::line(
+                "   Configured branch : "
+                . (
+                    $configuredBranch !== ''
+                        ? $configuredBranch
+                        : '(none)'
+                )
+            );
+
+            Console::line(
+                "   Current branch    : "
+                . (
+                    $currentBranch !== null
+                        ? $currentBranch
+                        : '(unknown)'
+                )
+            );
+
+            Console::line(
+                "   Path              : "
+                . (
+                    $path !== ''
+                        ? $path
+                        : '(none)'
+                )
+            );
+
+
+            if (
+                isset($repository['domain'])
+                && $repository['domain'] !== ''
+            ) {
+
+                Console::line(
+                    "   Domain            : "
+                    . $repository['domain']
+                );
+            }
+
+
+            if (
+                isset($repository['documentRoot'])
+                && $repository['documentRoot'] !== ''
+            ) {
+
+                Console::line(
+                    "   Document root     : "
+                    . $repository['documentRoot']
+                );
+            }
+        }
+
+
+        Console::separator();
+
+        Console::line();
+
+        Console::info(
+            "OK = aligned | MISMATCH = configured ≠ current | EMPTY = no commits | UNKNOWN / MISSING / NO GIT = path or git problem"
+        );
+
+        Console::pause();
     }
 
     private function addBranch(
