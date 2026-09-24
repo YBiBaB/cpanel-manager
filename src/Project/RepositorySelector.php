@@ -8,6 +8,20 @@ class RepositorySelector
 {
     public function select(array $config): ?array
     {
+        $index = $this->selectIndex($config);
+
+
+        if ($index === null) {
+            return null;
+        }
+
+
+        return $config['repositories'][$index];
+    }
+
+
+    public function selectIndex(array $config): ?int
+    {
         $repositories = $config['repositories'] ?? [];
 
         if (empty($repositories)) {
@@ -54,6 +68,6 @@ class RepositorySelector
             return null;
         }
 
-        return $repositories[$index];
+        return $index;
     }
 }

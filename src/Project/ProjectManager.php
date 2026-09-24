@@ -295,7 +295,162 @@ class ProjectManager
         );
     }
 
-    private function validateRegistration(
+    public function repairPath(
+        array $project,
+        string $newPath
+    ): array {
+
+        $resolvedPath = realpath($newPath);
+
+
+        if (
+            $resolvedPath === false
+            || !is_dir($resolvedPath)
+        ) {
+
+            throw new RuntimeException(
+                "Project path does not exist."
+            );
+        }
+
+
+        if (!is_readable($resolvedPath)) {
+
+            throw new RuntimeException(
+                "Project path is not readable."
+            );
+        }
+
+
+        $configPath =
+            $resolvedPath
+            . DIRECTORY_SEPARATOR
+            . ".cpm"
+            . DIRECTORY_SEPARATOR
+            . "config.json";
+
+
+        $configManager = new ConfigManager();
+
+
+        if (!$configManager->exists($configPath)) {
+
+            throw new RuntimeException(
+                "CPM configuration not found."
+            );
+        }
+
+
+        $config =
+            $configManager->load(
+                $configPath
+            );
+
+
+        if (
+            !isset($config['projectId'])
+        ) {
+
+            throw new RuntimeException(
+                "Missing project ID."
+            );
+        }
+
+
+        if (
+            $config['projectId']
+            !==
+            $project['projectId']
+        ) {
+
+            throw new RuntimeException(
+                "Project ID mismatch."
+            );
+        }
+
+
+        $repositories =
+            $config['repositories'] ?? [];
+
+
+        foreach (
+            $repositories
+            as $index => $repository
+        ) {
+
+            if (
+                !isset($repository['folder'])
+            ) {
+
+                throw new RuntimeException(
+                    "Repository folder is missing in configuration."
+                );
+            }
+
+
+            $repositoryPath =
+                $resolvedPath
+                . DIRECTORY_SEPARATOR
+                . $repository['folder'];
+
+
+            $resolvedRepositoryPath =
+                realpath($repositoryPath);
+
+
+            if (
+                $resolvedRepositoryPath === false
+                || !is_dir($resolvedRepositoryPath)
+            ) {
+
+                throw new RuntimeException(
+                    "Repository path does not exist: "
+                    . $repository['folder']
+                );
+            }
+
+
+            $repositories[$index]['path'] =
+                $resolvedRepositoryPath;
+        }
+
+
+        $config['repositories'] =
+            $repositories;
+
+
+        $configManager->save(
+            $configPath,
+            $config
+        );
+
+
+        $projectName =
+            $config['projectName']
+            ?? $project['projectName'];
+
+
+        $registry = new RegistryManager();
+
+        $registry->registerProject(
+            $project['projectId'],
+            $projectName,
+            $resolvedPath
+        );
+
+
+        return [
+
+            'projectId' => $project['projectId'],
+
+            'projectName' => $projectName,
+
+            'path' => $resolvedPath,
+
+        ];
+    }
+
+    public function validateRegistration(
         array $registryProject
     ): array {
 
