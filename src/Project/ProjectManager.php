@@ -633,6 +633,126 @@ class ProjectManager
         Console::line();
     }
 
+    public function prepareBranchDirectory(
+        array $project,
+        string $branchName,
+        string $folder,
+        string $remoteUrl
+    ): string {
+
+        if (
+            !isset($project['path'])
+            || !is_dir($project['path'])
+        ) {
+
+            throw new RuntimeException(
+                "Project path does not exist."
+            );
+        }
+
+
+        $targetPath =
+            $project['path']
+            . DIRECTORY_SEPARATOR
+            . $folder;
+
+
+        $gitHelper = new GitHelper();
+
+
+        if (is_dir($targetPath)) {
+
+            if (
+                !is_dir(
+                    $targetPath
+                    . DIRECTORY_SEPARATOR
+                    . '.git'
+                )
+            ) {
+
+                throw new RuntimeException(
+                    "Directory exists but is not a git repository: "
+                    . $folder
+                );
+            }
+
+
+            $gitHelper->pull(
+                $targetPath
+            );
+
+
+            $resolved = realpath($targetPath);
+
+
+            if ($resolved === false) {
+
+                throw new RuntimeException(
+                    "Cannot resolve branch path."
+                );
+            }
+
+
+            return $resolved;
+        }
+
+
+        $gitHelper->cloneBranch(
+            $remoteUrl,
+            $branchName,
+            $targetPath
+        );
+
+
+        $gitHelper->pull(
+            $targetPath
+        );
+
+
+        $resolved = realpath($targetPath);
+
+
+        if ($resolved === false) {
+
+            throw new RuntimeException(
+                "Cannot resolve branch path."
+            );
+        }
+
+
+        return $resolved;
+    }
+
+    public function appendRepository(
+        array $project,
+        array $repository
+    ): void {
+
+        $configPath =
+            $this->getConfigPath(
+                $project
+            );
+
+
+        $configManager =
+            new ConfigManager();
+
+        $config =
+            $configManager->load(
+                $configPath
+            );
+
+
+        $config['repositories'][] =
+            $repository;
+
+
+        $configManager->save(
+            $configPath,
+            $config
+        );
+    }
+
     public function removeBranchRegistration(
         array $project,
         int $repositoryIndex
