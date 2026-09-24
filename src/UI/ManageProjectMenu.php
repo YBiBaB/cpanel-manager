@@ -21,8 +21,10 @@ class ManageProjectMenu
 
             Console::line("1. Rename");
             Console::line("2. Refresh Registration");
-            Console::line("3. Remove from CPM");
-            Console::line("4. Delete Project");
+            Console::line("3. Branch Management");
+            Console::line("4. Repair Path");
+            Console::line("5. Remove from CPM");
+            Console::line("6. Delete Project");
             Console::line("0. Back");
 
             Console::line("");
@@ -49,6 +51,25 @@ class ManageProjectMenu
 
                 case "3":
 
+                    $menu =
+                        new BranchManagementMenu();
+
+                    $menu->show(
+                        $project
+                    );
+
+                    break;
+
+                case "4":
+
+                    $this->repairPath(
+                        $project
+                    );
+
+                    break;
+
+                case "5":
+
                     if (
                         $this->removeFromCpm(
                             $project
@@ -60,7 +81,7 @@ class ManageProjectMenu
 
                     break;
 
-                case "4":
+                case "6":
 
                     if (
                         $this->deleteProject(
@@ -216,6 +237,121 @@ class ManageProjectMenu
 
         Console::info(
             "Project directory was not changed."
+        );
+
+        Console::pause();
+    }
+
+    private function repairPath(
+        array &$project
+    ): void {
+
+        Console::title(
+            "Repair Path"
+        );
+
+        Console::line(
+            "Registered path: "
+            . ($project['path'] ?? '(none)')
+        );
+
+        Console::line();
+
+
+        $manager = new ProjectManager();
+
+        $status =
+            $manager->validateRegistration(
+                $project
+            );
+
+
+        if ($status['valid']) {
+
+            Console::success(
+                "Current registration looks valid."
+            );
+
+            Console::info(
+                "No path repair needed."
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
+        Console::warning(
+            "Current registration is broken."
+        );
+
+        Console::error(
+            $status['reason']
+        );
+
+
+        Console::line();
+
+
+        $newPath = Console::ask(
+            "New project path"
+        );
+
+
+        Console::line();
+
+
+        if (
+            !Console::confirm(
+                "Update project path to '"
+                . $newPath
+                . "'"
+            )
+        ) {
+
+            Console::info(
+                "Operation cancelled."
+            );
+
+            return;
+        }
+
+
+        try {
+
+            $updated =
+                $manager->repairPath(
+                    $project,
+                    $newPath
+                );
+
+        } catch (RuntimeException $e) {
+
+            Console::error(
+                $e->getMessage()
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
+        $project['path'] =
+            $updated['path'];
+
+        $project['projectName'] =
+            $updated['projectName'];
+
+
+        Console::success(
+            "Project path repaired successfully."
+        );
+
+        Console::line(
+            "Path: "
+            . $updated['path']
         );
 
         Console::pause();

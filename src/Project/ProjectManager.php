@@ -295,7 +295,162 @@ class ProjectManager
         );
     }
 
-    private function validateRegistration(
+    public function repairPath(
+        array $project,
+        string $newPath
+    ): array {
+
+        $resolvedPath = realpath($newPath);
+
+
+        if (
+            $resolvedPath === false
+            || !is_dir($resolvedPath)
+        ) {
+
+            throw new RuntimeException(
+                "Project path does not exist."
+            );
+        }
+
+
+        if (!is_readable($resolvedPath)) {
+
+            throw new RuntimeException(
+                "Project path is not readable."
+            );
+        }
+
+
+        $configPath =
+            $resolvedPath
+            . DIRECTORY_SEPARATOR
+            . ".cpm"
+            . DIRECTORY_SEPARATOR
+            . "config.json";
+
+
+        $configManager = new ConfigManager();
+
+
+        if (!$configManager->exists($configPath)) {
+
+            throw new RuntimeException(
+                "CPM configuration not found."
+            );
+        }
+
+
+        $config =
+            $configManager->load(
+                $configPath
+            );
+
+
+        if (
+            !isset($config['projectId'])
+        ) {
+
+            throw new RuntimeException(
+                "Missing project ID."
+            );
+        }
+
+
+        if (
+            $config['projectId']
+            !==
+            $project['projectId']
+        ) {
+
+            throw new RuntimeException(
+                "Project ID mismatch."
+            );
+        }
+
+
+        $repositories =
+            $config['repositories'] ?? [];
+
+
+        foreach (
+            $repositories
+            as $index => $repository
+        ) {
+
+            if (
+                !isset($repository['folder'])
+            ) {
+
+                throw new RuntimeException(
+                    "Repository folder is missing in configuration."
+                );
+            }
+
+
+            $repositoryPath =
+                $resolvedPath
+                . DIRECTORY_SEPARATOR
+                . $repository['folder'];
+
+
+            $resolvedRepositoryPath =
+                realpath($repositoryPath);
+
+
+            if (
+                $resolvedRepositoryPath === false
+                || !is_dir($resolvedRepositoryPath)
+            ) {
+
+                throw new RuntimeException(
+                    "Repository path does not exist: "
+                    . $repository['folder']
+                );
+            }
+
+
+            $repositories[$index]['path'] =
+                $resolvedRepositoryPath;
+        }
+
+
+        $config['repositories'] =
+            $repositories;
+
+
+        $configManager->save(
+            $configPath,
+            $config
+        );
+
+
+        $projectName =
+            $config['projectName']
+            ?? $project['projectName'];
+
+
+        $registry = new RegistryManager();
+
+        $registry->registerProject(
+            $project['projectId'],
+            $projectName,
+            $resolvedPath
+        );
+
+
+        return [
+
+            'projectId' => $project['projectId'],
+
+            'projectName' => $projectName,
+
+            'path' => $resolvedPath,
+
+        ];
+    }
+
+    public function validateRegistration(
         array $registryProject
     ): array {
 
@@ -476,6 +631,297 @@ class ProjectManager
         );
 
         Console::line();
+    }
+
+    public function prepareBranchDirectory(
+        array $project,
+        string $branchName,
+        string $folder,
+        string $remoteUrl
+    ): string {
+
+        if (
+            !isset($project['path'])
+            || !is_dir($project['path'])
+        ) {
+
+            throw new RuntimeException(
+                "Project path does not exist."
+            );
+        }
+
+
+        $targetPath =
+            $project['path']
+            . DIRECTORY_SEPARATOR
+            . $folder;
+
+
+        $gitHelper = new GitHelper();
+
+
+        if (is_dir($targetPath)) {
+
+            if (
+                !is_dir(
+                    $targetPath
+                    . DIRECTORY_SEPARATOR
+                    . '.git'
+                )
+            ) {
+
+                throw new RuntimeException(
+                    "Directory exists but is not a git repository: "
+                    . $folder
+                );
+            }
+
+
+            $gitHelper->pull(
+                $targetPath,
+                $branchName
+            );
+
+
+            $resolved = realpath($targetPath);
+
+
+            if ($resolved === false) {
+
+                throw new RuntimeException(
+                    "Cannot resolve branch path."
+                );
+            }
+
+
+            $this->installProductionDependencies(
+                $resolved
+            );
+
+
+            return $resolved;
+        }
+
+
+        $gitHelper->cloneBranch(
+            $remoteUrl,
+            $branchName,
+            $targetPath
+        );
+
+
+        $gitHelper->pull(
+            $targetPath,
+            $branchName
+        );
+
+
+        $resolved = realpath($targetPath);
+
+
+        if ($resolved === false) {
+
+            throw new RuntimeException(
+                "Cannot resolve branch path."
+            );
+        }
+
+
+        $this->installProductionDependencies(
+            $resolved
+        );
+
+
+        return $resolved;
+    }
+
+    private function installProductionDependencies(
+        string $path
+    ): void {
+
+        $composerHelper =
+            new ComposerHelper();
+
+        $composerHelper->installProduction(
+            $path
+        );
+    }
+
+    public function appendRepository(
+        array $project,
+        array $repository
+    ): void {
+
+        $configPath =
+            $this->getConfigPath(
+                $project
+            );
+
+
+        $configManager =
+            new ConfigManager();
+
+        $config =
+            $configManager->load(
+                $configPath
+            );
+
+
+        $config['repositories'][] =
+            $repository;
+
+
+        $configManager->save(
+            $configPath,
+            $config
+        );
+    }
+
+    public function removeBranchRegistration(
+        array $project,
+        int $repositoryIndex
+    ): void {
+
+        $configPath =
+            $this->getConfigPath(
+                $project
+            );
+
+
+        $configManager =
+            new ConfigManager();
+
+        $config =
+            $configManager->load(
+                $configPath
+            );
+
+
+        $repositories =
+            $config['repositories'] ?? [];
+
+
+        if (
+            !isset(
+                $repositories[$repositoryIndex]
+            )
+        ) {
+
+            throw new RuntimeException(
+                "Repository not found."
+            );
+        }
+
+
+        unset(
+            $repositories[$repositoryIndex]
+        );
+
+
+        $config['repositories'] =
+            array_values(
+                $repositories
+            );
+
+
+        $configManager->save(
+            $configPath,
+            $config
+        );
+    }
+
+    public function deleteBranch(
+        array $project,
+        int $repositoryIndex
+    ): void {
+
+        $configPath =
+            $this->getConfigPath(
+                $project
+            );
+
+
+        $configManager =
+            new ConfigManager();
+
+        $config =
+            $configManager->load(
+                $configPath
+            );
+
+
+        $repositories =
+            $config['repositories'] ?? [];
+
+
+        if (
+            !isset(
+                $repositories[$repositoryIndex]
+            )
+        ) {
+
+            throw new RuntimeException(
+                "Repository not found."
+            );
+        }
+
+
+        $repository =
+            $repositories[$repositoryIndex];
+
+        $repositoryPath =
+            $repository['path'] ?? null;
+
+
+        if (
+            $repositoryPath !== null
+            && is_dir($repositoryPath)
+        ) {
+
+            $directory = new Directory();
+            $directory->delete(
+                $repositoryPath
+            );
+        }
+
+
+        unset(
+            $repositories[$repositoryIndex]
+        );
+
+
+        $config['repositories'] =
+            array_values(
+                $repositories
+            );
+
+
+        $configManager->save(
+            $configPath,
+            $config
+        );
+    }
+
+    private function getConfigPath(
+        array $project
+    ): string {
+
+        if (
+            !isset($project['path'])
+            || $project['path'] === ''
+        ) {
+
+            throw new RuntimeException(
+                "Project path does not exist."
+            );
+        }
+
+
+        return $project['path']
+            . DIRECTORY_SEPARATOR
+            . ".cpm"
+            . DIRECTORY_SEPARATOR
+            . "config.json";
     }
 
     public function removeCpmDirectory(

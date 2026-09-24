@@ -5,6 +5,7 @@
 .DS_Store
 
 FEATURES.md
+MenuStructure.txt
 
 /storage/logs/*
 !/storage/logs/.gitkeep

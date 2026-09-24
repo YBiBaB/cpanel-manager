@@ -36,8 +36,7 @@ class RepositoryMenu
             Console::line("");
 
             Console::line("1. Git");
-            Console::line("2. Deployment");
-            Console::line("3. Information");
+            Console::line("2. Information");
             Console::line("0. Back");
 
             Console::line("");
@@ -48,27 +47,18 @@ class RepositoryMenu
 
                 case "1":
 
-                    Console::info(
-                        "Coming soon."
-                    );
+                    $menu =
+                        new GitMenu();
 
-                    Console::pause();
+                    $menu->show(
+                        $project,
+                        $repository
+                    );
 
                     break;
 
 
                 case "2":
-
-                    Console::info(
-                        "Coming soon."
-                    );
-
-                    Console::pause();
-
-                    break;
-
-
-                case "3":
 
                     Console::line("");
 
