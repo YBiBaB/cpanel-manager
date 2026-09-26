@@ -71,9 +71,8 @@ class AddProjectMenu
 
                 case '2':
 
-                    Console::info(
-                        "Add New Project is not implemented yet."
-                    );
+                    $this->projectManager
+                        ->addNewProject();
 
                     break;
 

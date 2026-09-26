@@ -72,6 +72,333 @@ class ProjectManager
         );
     }
 
+    public function addNewProject(): void
+    {
+        Console::title(
+            "Add New Project"
+        );
+
+
+        $parentInput = Console::ask(
+            "Parent directory"
+        );
+
+
+        $parentPath = realpath($parentInput);
+
+
+        if (
+            $parentPath === false
+            || !is_dir($parentPath)
+        ) {
+
+            Console::error(
+                "Parent directory does not exist."
+            );
+
+            return;
+        }
+
+
+        if (!is_writable($parentPath)) {
+
+            Console::error(
+                "Parent directory is not writable."
+            );
+
+            return;
+        }
+
+
+        $projectName = Console::ask(
+            "Project name"
+        );
+
+
+        if (
+            str_contains($projectName, '/')
+            || str_contains($projectName, '\\')
+            || $projectName === '.'
+            || $projectName === '..'
+        ) {
+
+            Console::error(
+                "Invalid project name."
+            );
+
+            return;
+        }
+
+
+        $projectPath =
+            $parentPath
+            . DIRECTORY_SEPARATOR
+            . $projectName;
+
+
+        if (file_exists($projectPath)) {
+
+            Console::error(
+                "Project path already exists."
+            );
+
+            Console::info(
+                "Use Add Existing Project instead."
+            );
+
+            return;
+        }
+
+
+        Console::line();
+
+
+        if (
+            !Console::confirm(
+                "Create project at '{$projectPath}'"
+            )
+        ) {
+
+            Console::info(
+                "Operation cancelled."
+            );
+
+            return;
+        }
+
+
+        if (
+            !mkdir(
+                $projectPath,
+                0755,
+                true
+            )
+        ) {
+
+            Console::error(
+                "Cannot create project directory."
+            );
+
+            return;
+        }
+
+
+        $createdRoot = true;
+
+
+        try {
+
+            Console::line();
+
+            $remoteUrl = Console::ask(
+                "Remote URL"
+            );
+
+
+            $branch = Console::ask(
+                "Git branch [main]",
+                true
+            );
+
+
+            if ($branch === '') {
+                $branch = 'main';
+            }
+
+
+            $folder = Console::ask(
+                "Folder [{$branch}]",
+                true
+            );
+
+
+            if ($folder === '') {
+                $folder = $branch;
+            }
+
+
+            if (
+                str_contains($folder, '/')
+                || str_contains($folder, '\\')
+                || $folder === '.'
+                || $folder === '..'
+            ) {
+
+                throw new RuntimeException(
+                    "Invalid folder name."
+                );
+            }
+
+
+            Console::line();
+
+            Console::info(
+                "Preparing branch directory..."
+            );
+
+
+            $repositoryPath =
+                $this->prepareBranchDirectory(
+                    [
+                        'path' => $projectPath,
+                    ],
+                    $branch,
+                    $folder,
+                    $remoteUrl
+                );
+
+
+            Console::success(
+                "Branch directory ready."
+            );
+
+            Console::success(
+                "Production composer install completed."
+            );
+
+
+            $configurator =
+                new RepositoryConfigurator();
+
+            $repository =
+                $configurator->configure(
+                    [
+                        'folder' => $folder,
+                        'path' => $repositoryPath,
+                    ]
+                );
+
+
+            if (
+                ($repository['branch'] ?? '')
+                === ''
+            ) {
+
+                $repository['branch'] =
+                    $branch;
+            }
+
+
+            $resolvedProjectPath =
+                realpath($projectPath);
+
+
+            if ($resolvedProjectPath === false) {
+
+                throw new RuntimeException(
+                    "Cannot resolve project path."
+                );
+            }
+
+
+            $projectId = Uuid::generate();
+
+
+            $config = [
+
+                'projectId' => $projectId,
+
+                'configVersion' => 1,
+
+                'projectName' => $projectName,
+
+                'repositories' => [
+                    $repository,
+                ],
+
+            ];
+
+
+            $configPath =
+                $resolvedProjectPath
+                . DIRECTORY_SEPARATOR
+                . ".cpm"
+                . DIRECTORY_SEPARATOR
+                . "config.json";
+
+
+            $configManager =
+                new ConfigManager();
+
+            $configManager->save(
+                $configPath,
+                $config
+            );
+
+
+            $registry =
+                new RegistryManager();
+
+            $registry->registerProject(
+                $projectId,
+                $projectName,
+                $resolvedProjectPath
+            );
+
+
+            $createdRoot = false;
+
+
+        } catch (RuntimeException $e) {
+
+            if (
+                $createdRoot
+                && is_dir($projectPath)
+            ) {
+
+                try {
+
+                    $directory =
+                        new Directory();
+
+                    $directory->delete(
+                        $projectPath
+                    );
+
+                    Console::warning(
+                        "Cleaned up project directory."
+                    );
+
+                } catch (RuntimeException $cleanupError) {
+
+                    Console::warning(
+                        "Failed to clean up project directory: "
+                        . $projectPath
+                    );
+                }
+            }
+
+
+            Console::error(
+                $e->getMessage()
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
+        Console::separator();
+
+        Console::success(
+            "Project configuration saved."
+        );
+
+        Console::success(
+            "Project registered successfully."
+        );
+
+        Console::line();
+
+        $this->showProjectSummary(
+            $config,
+            $configPath
+        );
+
+        Console::pause();
+    }
+
     public function refreshRegistration(
         array $project,
         ?string $projectId = null,
