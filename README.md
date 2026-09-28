@@ -114,4 +114,4 @@ Create the database and user, import dumps, and wire credentials into your app i
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
