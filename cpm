@@ -1,5 +1,19 @@
 #!/bin/bash
 
+ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
+AUTOLOAD="$ROOT_DIR/vendor/autoload.php"
+
+
+if [ ! -f "$AUTOLOAD" ]
+then
+    echo "[ERROR] Missing vendor/autoload.php."
+    echo "Run composer install once in the project directory before starting CPM:"
+    echo "  cd \"$ROOT_DIR\""
+    echo "  composer install"
+    exit 1
+fi
+
+
 if ! command -v php >/dev/null 2>&1
 then
     echo "PHP CLI is required."
@@ -17,4 +31,4 @@ then
 fi
 
 
-php "$(dirname "$0")/bin/cpm.php"
+php "$ROOT_DIR/bin/cpm.php"

@@ -14,22 +14,28 @@ CPM helps you **manage existing projects** and **import / create new ones**. Dom
 
 CPM is **green software**: no system-wide install and no `sudo`. That suits Monash cPanel’s terminal, where elevated privileges are usually unavailable. Copy the project onto the server and run it.
 
+**First run:** after downloading or cloning, you must run `composer install` once in the project directory. GitHub ZIP/clone does **not** include `vendor/`; without it, CPM may exit with no useful output on cPanel.
+
 ### Method 1 — ZIP via File Manager
 
 1. Download the repository ZIP from GitHub.
 2. In cPanel **File Manager**, upload and extract the archive.
-3. Open Terminal (or SSH), `cd` into the extracted folder, then run:
+3. Open Terminal (or SSH), `cd` into the extracted folder.
+4. Install dependencies, then start CPM:
 
 ```bash
+composer install
 bash cpm
 ```
 
 ### Method 2 — Git clone / pull
 
 1. Clone (or pull) the repository with the GitHub URL.
-2. `cd` into the project directory, then run:
+2. `cd` into the project directory.
+3. Install dependencies, then start CPM:
 
 ```bash
+composer install
 bash cpm
 ```
 
@@ -40,6 +46,36 @@ php bin/cpm.php
 ```
 
 On first run, CPM runs a system check (PHP, Git, Composer, and common extensions).
+
+### If nothing happens (no output, no error)
+
+This is common on Monash cPanel. Check in order:
+
+1. **Confirm you ran `composer install`** and that `vendor/autoload.php` exists.
+2. **Confirm you are in the project directory** (the folder that contains `cpm` and `bin/`).
+3. **Confirm PHP is CLI, not CGI:**
+
+```bash
+php -r 'echo PHP_SAPI, PHP_EOL;'
+```
+
+It must print `cli`. If it prints `cgi-fcgi` (or similar), plain `php` will hang with no output. Try:
+
+```bash
+php -cli bin/cpm.php
+# or
+ea-php81 bin/cpm.php
+# or
+/usr/local/bin/php bin/cpm.php
+```
+
+4. **Force error display:**
+
+```bash
+php -d display_errors=1 bin/cpm.php
+```
+
+5. Prefer `bash cpm` — the wrapper tries to pick a real CLI binary.
 
 ## Deployment architecture
 
