@@ -139,14 +139,28 @@ CPM does **not** create domains, issue SSL certificates, or import / configure d
 
 Create the database and user, import dumps, and wire credentials into your app in cPanel (or via your app’s env / config files). CPM does not automate this yet.
 
+### Disable debug mode (important)
+
+CPM does **not** turn off application debug mode for you. After **Add New Project** or **Branch Management → Add Branch**, check the new environment and disable debug before exposing it on a public subdomain.
+
+Examples:
+
+| Framework | Where to check |
+|-----------|----------------|
+| CakePHP | `config/app_local.php` — set `'debug' => false` (or equivalent) |
+| Laravel / many PHP apps | `.env` — set `APP_DEBUG=false` |
+
+Leaving debug on can leak paths, SQL, and stack traces to anyone who hits an error page.
+
 ## Typical student workflow
 
 1. Use CPM to **Add Existing** or **Add New** project and register environments.
 2. Use **Branch Management → Add Branch** when you need another environment (e.g. `review`, `dev`).
-3. In cPanel, create the matching subdomain and SSL for each environment.
-4. Point each domain’s document root at that environment’s web root.
-5. Configure the database in cPanel and connect it in the app.
-6. Use CPM **Git** (fetch / pull) when you need to update code on an environment.
+3. **Disable debug** in that environment’s app config (see above).
+4. In cPanel, create the matching subdomain and SSL for each environment.
+5. Point each domain’s document root at that environment’s web root.
+6. Configure the database in cPanel and connect it in the app.
+7. Use CPM **Git** (fetch / pull) when you need to update code on an environment.
 
 ## License
 
