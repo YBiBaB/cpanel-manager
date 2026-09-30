@@ -19,7 +19,7 @@ class ProjectManager
 
 
         $projectPath = Console::ask(
-            "Project path"
+            "Project path (absolute or ~/...)"
         );
 
 

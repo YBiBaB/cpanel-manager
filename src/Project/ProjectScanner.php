@@ -8,35 +8,78 @@ class ProjectScanner
 {
     public function scan(string $projectPath): array
     {
-        $projectPath = realpath($projectPath);
+        $resolvedPath = $this->resolvePath($projectPath);
 
-        $this->validateProjectPath($projectPath);
+        $this->validateProjectPath(
+            $resolvedPath,
+            $projectPath
+        );
 
         return [
-            'projectName' => basename($projectPath),
-            'projectPath' => $projectPath,
-            'repositories' => $this->scanRepositories($projectPath),
+            'projectName' => basename($resolvedPath),
+            'projectPath' => $resolvedPath,
+            'repositories' => $this->scanRepositories($resolvedPath),
         ];
     }
 
 
-    private function validateProjectPath(?string $projectPath): void
+    private function resolvePath(string $path): string|false
     {
-        if ($projectPath === false || $projectPath === null) {
+        $path = trim($path);
+
+        if ($path === '') {
+            return false;
+        }
+
+        // Shell-style ~ is not expanded by PHP realpath().
+        if ($path === '~') {
+            $home = getenv('HOME');
+
+            if ($home === false || $home === '') {
+                return false;
+            }
+
+            $path = $home;
+        } elseif (str_starts_with($path, '~/')) {
+            $home = getenv('HOME');
+
+            if ($home === false || $home === '') {
+                return false;
+            }
+
+            $path =
+                $home
+                . DIRECTORY_SEPARATOR
+                . substr($path, 2);
+        }
+
+        return realpath($path);
+    }
+
+
+    private function validateProjectPath(
+        string|false $projectPath,
+        string $originalPath
+    ): void {
+        if ($projectPath === false) {
+            $cwd = getcwd() ?: '(unknown)';
+
             throw new RuntimeException(
-                "Project path does not exist."
+                "Project path does not exist: {$originalPath}\n"
+                . "Current directory: {$cwd}\n"
+                . "Tip: use an absolute path, e.g. /home/USER/FIT3048 or ~/FIT3048"
             );
         }
 
         if (!is_dir($projectPath)) {
             throw new RuntimeException(
-                "Project path is not a directory."
+                "Project path is not a directory: {$projectPath}"
             );
         }
 
         if (!is_readable($projectPath)) {
             throw new RuntimeException(
-                "Project path is not readable."
+                "Project path is not readable: {$projectPath}"
             );
         }
     }
