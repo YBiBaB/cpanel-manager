@@ -5,6 +5,7 @@ namespace Cpm\UI;
 use Cpm\Registry\RegistryManager;
 use Cpm\Project\ProjectManager;
 use Cpm\Project\ProjectScanner;
+use Cpm\Utils\PathHelper;
 use RuntimeException;
 
 class ManageProjectMenu
@@ -295,8 +296,36 @@ class ManageProjectMenu
 
 
         $newPath = Console::ask(
-            "New project path"
+            "New project path (absolute or ~/...)"
         );
+
+
+        $resolvedPath = PathHelper::resolve($newPath);
+
+
+        if (
+            $resolvedPath === false
+            || !is_dir($resolvedPath)
+        ) {
+
+            $cwd = getcwd() ?: '(unknown)';
+
+            Console::error(
+                "Project path does not exist: {$newPath}"
+            );
+
+            Console::info(
+                "Current directory: {$cwd}"
+            );
+
+            Console::info(
+                "Tip: use an absolute path or ~/..."
+            );
+
+            Console::pause();
+
+            return;
+        }
 
 
         Console::line();
@@ -305,7 +334,7 @@ class ManageProjectMenu
         if (
             !Console::confirm(
                 "Update project path to '"
-                . $newPath
+                . $resolvedPath
                 . "'"
             )
         ) {
@@ -323,7 +352,7 @@ class ManageProjectMenu
             $updated =
                 $manager->repairPath(
                     $project,
-                    $newPath
+                    $resolvedPath
                 );
 
         } catch (RuntimeException $e) {

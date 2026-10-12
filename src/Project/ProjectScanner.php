@@ -2,13 +2,14 @@
 
 namespace Cpm\Project;
 
+use Cpm\Utils\PathHelper;
 use RuntimeException;
 
 class ProjectScanner
 {
     public function scan(string $projectPath): array
     {
-        $resolvedPath = $this->resolvePath($projectPath);
+        $resolvedPath = PathHelper::resolve($projectPath);
 
         $this->validateProjectPath(
             $resolvedPath,
@@ -20,40 +21,6 @@ class ProjectScanner
             'projectPath' => $resolvedPath,
             'repositories' => $this->scanRepositories($resolvedPath),
         ];
-    }
-
-
-    private function resolvePath(string $path): string|false
-    {
-        $path = trim($path);
-
-        if ($path === '') {
-            return false;
-        }
-
-        // Shell-style ~ is not expanded by PHP realpath().
-        if ($path === '~') {
-            $home = getenv('HOME');
-
-            if ($home === false || $home === '') {
-                return false;
-            }
-
-            $path = $home;
-        } elseif (str_starts_with($path, '~/')) {
-            $home = getenv('HOME');
-
-            if ($home === false || $home === '') {
-                return false;
-            }
-
-            $path =
-                $home
-                . DIRECTORY_SEPARATOR
-                . substr($path, 2);
-        }
-
-        return realpath($path);
     }
 
 

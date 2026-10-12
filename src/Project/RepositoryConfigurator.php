@@ -3,6 +3,7 @@
 namespace Cpm\Project;
 
 use Cpm\UI\Console;
+use Cpm\Utils\PathHelper;
 
 class RepositoryConfigurator
 {
@@ -66,12 +67,27 @@ class RepositoryConfigurator
 
 
         $documentRoot = Console::ask(
-            "Document root [webroot]",
+            "Document root [webroot] (relative, absolute, or ~/...)",
             true
         );
 
         if ($documentRoot === '') {
             $documentRoot = "webroot";
+        } else {
+            $expanded = PathHelper::expandHome($documentRoot);
+
+            if ($expanded !== null) {
+                $documentRoot = $expanded;
+            }
+
+            // Resolve only when an absolute path was given / expanded.
+            if (str_starts_with($documentRoot, DIRECTORY_SEPARATOR)) {
+                $resolved = realpath($documentRoot);
+
+                if ($resolved !== false) {
+                    $documentRoot = $resolved;
+                }
+            }
         }
 
         Console::success(

@@ -7,6 +7,7 @@ use Cpm\UI\Console;
 use RuntimeException;
 use Cpm\Config\ConfigManager;
 use Cpm\Registry\RegistryManager;
+use Cpm\Utils\PathHelper;
 use Cpm\Utils\Uuid;
 
 class ProjectManager
@@ -80,11 +81,11 @@ class ProjectManager
 
 
         $parentInput = Console::ask(
-            "Parent directory"
+            "Parent directory (absolute or ~/...)"
         );
 
 
-        $parentPath = realpath($parentInput);
+        $parentPath = PathHelper::resolve($parentInput);
 
 
         if (
@@ -92,8 +93,18 @@ class ProjectManager
             || !is_dir($parentPath)
         ) {
 
+            $cwd = getcwd() ?: '(unknown)';
+
             Console::error(
-                "Parent directory does not exist."
+                "Parent directory does not exist: {$parentInput}"
+            );
+
+            Console::info(
+                "Current directory: {$cwd}"
+            );
+
+            Console::info(
+                "Tip: use an absolute path or ~/..., e.g. ~/Test"
             );
 
             return;
@@ -627,7 +638,7 @@ class ProjectManager
         string $newPath
     ): array {
 
-        $resolvedPath = realpath($newPath);
+        $resolvedPath = PathHelper::resolve($newPath);
 
 
         if (
@@ -636,7 +647,7 @@ class ProjectManager
         ) {
 
             throw new RuntimeException(
-                "Project path does not exist."
+                "Project path does not exist: {$newPath}"
             );
         }
 
