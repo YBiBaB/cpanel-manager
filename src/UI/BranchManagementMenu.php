@@ -389,6 +389,18 @@ class BranchManagementMenu
         }
 
 
+        if (empty($remoteBranches)) {
+
+            Console::warning(
+                "No branches found on the remote."
+            );
+
+            Console::pause();
+
+            return;
+        }
+
+
         $available =
             $this->findUnmanagedBranches(
                 $remoteBranches,
@@ -399,7 +411,7 @@ class BranchManagementMenu
         if (empty($available)) {
 
             Console::info(
-                "All remote branches are already managed."
+                "All remote branches already have a managed folder."
             );
 
             Console::pause();
@@ -835,7 +847,9 @@ class BranchManagementMenu
         array $config
     ): array {
 
-        $managed = [];
+        // Only folder names block reuse — multiple envs may track
+        // the same git branch under different folder names.
+        $managedFolders = [];
 
 
         foreach (
@@ -848,19 +862,8 @@ class BranchManagementMenu
                 && $repository['folder'] !== ''
             ) {
 
-                $managed[
+                $managedFolders[
                     $repository['folder']
-                ] = true;
-            }
-
-
-            if (
-                isset($repository['branch'])
-                && $repository['branch'] !== ''
-            ) {
-
-                $managed[
-                    $repository['branch']
                 ] = true;
             }
         }
@@ -871,7 +874,7 @@ class BranchManagementMenu
 
         foreach ($remoteBranches as $branch) {
 
-            if (isset($managed[$branch])) {
+            if (isset($managedFolders[$branch])) {
                 continue;
             }
 

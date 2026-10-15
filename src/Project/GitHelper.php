@@ -169,7 +169,12 @@ class GitHelper
 
 
     /**
-     * @return string[] branch names without remote prefix
+     * List all branch names on the remote.
+     *
+     * Uses `git ls-remote` so single-branch clones still see every
+     * remote head (local `git branch -r` only shows fetched refs).
+     *
+     * @return string[] branch names without refs/heads/ prefix
      */
     public function listRemoteBranches(
         string $path,
@@ -178,21 +183,25 @@ class GitHelper
 
         $result = $this->runIn(
             $path,
-            "git branch -r"
+            "git ls-remote --heads "
+            . escapeshellarg($remote)
         );
 
 
         if (!$result['success']) {
 
             throw new RuntimeException(
-                "Cannot list remote branches."
+                $this->formatFailure(
+                    "Cannot list remote branches.",
+                    $result['output']
+                )
             );
         }
 
 
         $branches = [];
 
-        $prefix = $remote . '/';
+        $prefix = 'refs/heads/';
 
 
         foreach ($result['output'] as $line) {
@@ -205,20 +214,21 @@ class GitHelper
             }
 
 
-            if (str_contains($line, '->')) {
+            // Format: <hash><TAB or spaces>refs/heads/<branch>
+            if (
+                !preg_match(
+                    '#^[0-9a-f]+\s+'
+                    . preg_quote($prefix, '#')
+                    . '(.+)$#i',
+                    $line,
+                    $matches
+                )
+            ) {
                 continue;
             }
 
 
-            if (!str_starts_with($line, $prefix)) {
-                continue;
-            }
-
-
-            $branch = substr(
-                $line,
-                strlen($prefix)
-            );
+            $branch = $matches[1];
 
 
             if ($branch === '') {
